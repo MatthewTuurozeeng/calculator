@@ -58,7 +58,7 @@ This project is a **simple web-based calculator** built using **HTML**, **CSS**,
 
 ## Screenshot
 
-*(To be inserted)*
+![Calculator Preview](images/calculator_image.png)
 
 
 **Author**: Matthew Tuurozeeng 
