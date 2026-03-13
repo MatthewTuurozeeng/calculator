@@ -1,33 +1,16 @@
-function add(x,y) {
-    let sum  = 0;
-    for(let i  = 0; i<y; i++){
-        sum++;
-    }
-    return x + sum - y; // shows addition logic
+function add(x, y) {
+  return x + y;
 }
-function multiply(x,y){
-    let product = 0;
-    for( let i = 0; i<Math.abs(y); i++){
-        product  = product + x;
-    }
-    return y < 0 ? -product : product;
+function multiply(x, y) {
+  return x * y;
 }
 
 function subtract(x,y){
     return x - y;
 }
 
-function divide(x,y){
-    if(y == 0){
-        return "Cannot dvivide by zero"
-    }
-    let count = 0;
-    let sum = Math.abs(x);
-    while(sum > Math.abs(y)){
-        sum = sum - Math.abs(b);
-        count++;
-    }
-    return (x < 0) !== (b < 0) ? -count: count;
+function divide(x, y) {
+  return x / y;
 }
 
 function operate(operator, x, y) {
@@ -48,6 +31,7 @@ let reset_display = false; // a flag to tel the calculator to clear th display s
 
 
 const display  = document.getElementById('display');
+const expression_display = document.getElementById('expression-display');
 const number_buttons = document.querySelectorAll('[data-number]');
 const operator_buttons = document.querySelectorAll('[data-operator]');
 const clear_button = document.getElementById('clear');
@@ -62,12 +46,28 @@ function resetDisplay() {
 }
 
 
+function updateExpressionPreview() {
+  if (!expression_display) {
+    return;
+  }
+  if (current_operator === null) {
+    expression_display.textContent = display.textContent || '0';
+    return;
+  }
+  if (reset_display) {
+    expression_display.textContent = `${first_number} ${current_operator}`;
+    return;
+  }
+  expression_display.textContent = `${first_number} ${current_operator} ${display.textContent}`;
+}
+
 
 function appendNumber(number) {
   if (display.textContent === '0' || reset_display) {
     resetDisplay();
   }
   display.textContent += number;
+  updateExpressionPreview();
 }
 
 
@@ -75,14 +75,24 @@ function evaluate() {
   if (current_operator === null || reset_display) {
     return;
   }
-  if (current_operator === '/' && display.textContent === '0') {
+  const operator_for_display = current_operator;
+  if (operator_for_display === '/' && parseFloat(display.textContent) === 0) {
+    if (expression_display) {
+      expression_display.textContent = `${first_number} ${operator_for_display} ${display.textContent}`;
+    }
     display.textContent = "Error! Division by 0";
+    reset_display = true;
     return;
   }
   second_number = display.textContent;
   const result = operate(current_operator, parseFloat(first_number),parseFloat(second_number));
   display.textContent = Math.round(result * 1000) / 1000;
+  if (expression_display) {
+    expression_display.textContent = `${first_number} ${operator_for_display} ${second_number} =`;
+  }
+  first_number = display.textContent;
   current_operator = null;
+  reset_display = true;
 }
 
 function setOperation(operator){
@@ -92,13 +102,21 @@ function setOperation(operator){
     first_number  = display.textContent;
     current_operator = operator;
     reset_display = true;
+  updateExpressionPreview();
 }
 
 
 function appendDecimal(){
-    if(!display.textContent.includes('.')){
-        display.textContent += '.'
-    }  
+  if(reset_display){
+    resetDisplay();
+  }
+  if(display.textContent === ''){
+    display.textContent = '0';
+  }
+  if(!display.textContent.includes('.')){
+    display.textContent += '.'
+  }  
+  updateExpressionPreview();
 }
 
 // append digit to display
@@ -115,10 +133,15 @@ function clear() {
   first_number = '';
   second_number = '';
   current_operator = null;
+  reset_display = false;
+  if (expression_display) {
+    expression_display.textContent = '0';
+  }
 }
 
 function backspace(){
     display.textContent = display.textContent.slice(0,-1) || '0';
+    updateExpressionPreview();
 }
 
 equals_button.addEventListener('click', evaluate);
